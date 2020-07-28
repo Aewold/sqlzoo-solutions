@@ -93,18 +93,23 @@ WHERE stopb.name = 'Craiglockhart'
 
 --#10
 /*
-Find the routes involving two buses that can go from Craiglockhart to Sighthill.
+Find the routes involving two buses that can go from Craiglockhart to Lochend.
 Show the bus no. and company for the first bus, the name of the stop for the transfer,
 and the bus no. and company for the second bus.
+
+Hint
+Self-join twice to find buses that visit Craiglockhart and Lochend, then join those on matching stops.
 */
-SELECT DISTINCT a.num, a.company, stopb.name ,  c.num,  c.company
-FROM route a JOIN route b
-ON (a.company = b.company AND a.num = b.num)
-JOIN ( route c JOIN route d ON (c.company = d.company AND c.num= d.num))
-JOIN stops stopa ON (a.stop = stopa.id)
-JOIN stops stopb ON (b.stop = stopb.id)
-JOIN stops stopc ON (c.stop = stopc.id)
-JOIN stops stopd ON (d.stop = stopd.id)
-WHERE  stopa.name = 'Craiglockhart' AND stopd.name = 'Sighthill'
-            AND  stopb.name = stopc.name
-ORDER BY LENGTH(a.num), b.num, stopb.id, LENGTH(c.num), d.num
+SELECT DISTINCT S.num, S.company, stops.name, E.num, E.company
+FROM
+(SELECT a.company, a.num, b.stop
+ FROM route a JOIN route b ON (a.company=b.company AND a.num=b.num)
+ WHERE a.stop=(SELECT id FROM stops WHERE name= 'Craiglockhart')
+)S
+  JOIN
+(SELECT a.company, a.num, b.stop
+ FROM route a JOIN route b ON (a.company=b.company AND a.num=b.num)
+ WHERE a.stop=(SELECT id FROM stops WHERE name= 'Lochend')
+)E
+ON (S.stop = E.stop)
+JOIN stops ON(stops.id = S.stop)
